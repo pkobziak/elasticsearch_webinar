@@ -471,8 +471,17 @@ DELETE inspections
 
 PUT /inspections
 
-PUT inspections/_mapping
+PUT _template/inspections
 {
+  "index_patterns": ["inspections"],
+  "settings": {
+    "number_of_shards": 1
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "_source": {
+      "enabled": false
+    },
       "properties": {
           "business_address": {
             "type": "text",
@@ -556,8 +565,10 @@ PUT inspections/_mapping
             "type": "keyword"
           }
         }
-}
+      }
+    }
 
+DELETE /_template/inspections
 
 # Lets index data again
 POST /inspections/_bulk
@@ -681,14 +692,9 @@ PUT _cluster/settings
   "persistent": {
     "search": {
       "remote": {
-        "clusterA": {
-          "seeds": [
-            "localhost:9300"
-          ]
-        },
         "clusterB": {
           "seeds": [
-            "localhost:9301"
+            "192.168.56.102:9300"
           ]
         }
       }
@@ -698,5 +704,9 @@ PUT _cluster/settings
 
 # Check settings fro Cross Cluster Search
 GET /_remote/info
-
 GET /clusterB:inspections/_search
+
+POST /inspections/_forcemerge?max_num_segments=1
+POST /inspections/_freeze
+POST /inspections/_unfreeze
+GET /inspections/_search?ignore_throttled=false
